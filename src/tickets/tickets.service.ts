@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { CreateTicketDTO } from './dto/create-ticket.dto.js';
 import { UpdateTicketDTO } from './dto/update-ticket.dto.js';
@@ -39,17 +39,38 @@ export class TicketsService {
   }
 
   findUnique(ticketId: string) {
-    return this.inMemory.findUnique<Ticket>(
+    const res = this.inMemory.findUnique<Ticket>(
       'tickets',
       (item) => item.id === ticketId,
     );
+
+    if (!res) {
+      throw new NotFoundException();
+    }
+
+    return res;
   }
 
   update(id: string, ticket: UpdateTicketDTO) {
-    this.inMemory.update<Ticket>('tickets', (item) => item.id === id, ticket);
+    const res = this.inMemory.update<Ticket>(
+      'tickets',
+      (item) => item.id === id,
+      ticket,
+    );
+
+    if (!res) {
+      throw new NotFoundException();
+    }
   }
 
   delete(id: string) {
-    this.inMemory.delete<Ticket>('tickets', (item) => item.id === id);
+    const res = this.inMemory.delete<Ticket>(
+      'tickets',
+      (item) => item.id === id,
+    );
+
+    if (!res) {
+      throw new NotFoundException();
+    }
   }
 }

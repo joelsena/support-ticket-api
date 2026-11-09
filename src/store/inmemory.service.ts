@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import crypto from 'node:crypto';
 
 type PaginatedResult<T> = {
@@ -21,13 +21,11 @@ export class InMemoryService {
     tableName: string,
     predicate: (item: T) => boolean,
   ): T | undefined {
+    if (!this.store[tableName]) return undefined;
+
     const item = Object.values(this.store[tableName]).find((item: T) =>
       predicate(item),
     );
-
-    if (!item) {
-      throw new NotFoundException();
-    }
 
     return item;
   }
@@ -35,13 +33,26 @@ export class InMemoryService {
   findMany<T>(
     tableName: string,
     predicate: (item: T) => boolean,
-    pagination: { page: number; limit: number },
+    pagination?: { page: number; limit: number },
   ): PaginatedResult<T> {
+    if (!this.store[tableName])
+      return {
+        data: [],
+        meta: {
+          back: false,
+          next: false,
+          limit: 5,
+          page: 1,
+          total: 0,
+          totalPages: 0,
+        },
+      };
+
     const items = Object.values(this.store[tableName]);
 
     const filteredItems = items.filter((item: T) => predicate(item));
 
-    const { page, limit } = pagination;
+    const { page = 1, limit = 5 } = pagination || {};
 
     const pageStart = (page - 1) * limit;
     const pageEnd = pageStart + (limit - 1);
@@ -67,6 +78,8 @@ export class InMemoryService {
   create(tableName: string, data: any) {
     const id = crypto.randomUUID();
 
+    if (!this.store[tableName]) this.store[tableName] = {};
+
     this.store[tableName][id] = {
       ...data,
       id,
@@ -79,14 +92,14 @@ export class InMemoryService {
       predicate(item),
     );
 
-    if (!item) {
-      throw new NotFoundException();
-    }
+    if (!item) return false;
 
     this.store[tableName][item.id] = {
       ...this.store[tableName][item.id],
       ...data,
     };
+
+    return true;
   }
 
   delete<T>(tableName: string, predicate: (item: T) => boolean) {
@@ -94,10 +107,10 @@ export class InMemoryService {
       predicate(item),
     );
 
-    if (!item) {
-      throw new NotFoundException();
-    }
+    if (!item) return false;
 
     delete this.store[tableName][item.id];
+
+    return true;
   }
 }
