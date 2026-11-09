@@ -92,6 +92,8 @@ describe('Store Tests', () => {
     );
   });
 
+  it.todo('should pass in all pagination edge cases');
+
   it('should handle no matching resource', () => {
     expect(service.findMany('test', (item) => false)).toEqual(
       expect.objectContaining({ data: [] }),

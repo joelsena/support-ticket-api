@@ -61,6 +61,8 @@ export class TicketsService {
     if (!res) {
       throw new NotFoundException();
     }
+
+    return res;
   }
 
   delete(id: string) {
@@ -72,5 +74,7 @@ export class TicketsService {
     if (!res) {
       throw new NotFoundException();
     }
+
+    return res;
   }
 }

@@ -7,6 +7,7 @@ import {
   Patch,
   Delete,
   Query,
+  HttpStatus,
 } from '@nestjs/common';
 
 import { TicketsService } from './tickets.service.js';
@@ -23,12 +24,22 @@ import {
   type ListTicketDTO,
   listTicketsQuerySchema,
 } from './dto/list-tickets-query.dto.js';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller('tickets')
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
   @Post()
+  @ApiOperation({ summary: 'create ticket' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Created',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    description: 'Validation failed',
+  })
   createTicket(
     @Body({ schema: createTicketSchema }) ticketDTO: CreateTicketDTO,
   ) {
@@ -36,25 +47,60 @@ export class TicketsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'list tickets' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Paginated and filtered tickets',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    description: 'Validation failed',
+  })
   findMany(@Query({ schema: listTicketsQuerySchema }) query: ListTicketDTO) {
+    // TODO: return valid type
     return this.ticketsService.findMany(query) as {};
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'return ticket by id' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    description: 'Validation failed',
+  })
   findOne(@Param('id', { schema: z.uuid() }) id: string) {
+    // TODO: return valid type
     return this.ticketsService.findUnique(id) as {};
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'update ticket' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    description: 'Validation failed',
+  })
   updateTicket(
     @Param('id', { schema: z.uuid() }) id: string,
     @Body({ schema: updateTicketSchema }) ticket: UpdateTicketDTO,
   ) {
-    this.ticketsService.update(id, ticket);
+    return this.ticketsService.update(id, ticket) as {};
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'delete ticket' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    description: 'Validation failed',
+  })
   deleteTicket(@Param('id', { schema: z.uuid() }) id: string) {
-    this.ticketsService.delete(id);
+    return this.ticketsService.delete(id) as {};
   }
 }

@@ -13,11 +13,16 @@ type PaginatedResult<T> = {
   };
 };
 
+type GenericItem = {
+  id: string;
+  createdAt: Date;
+};
+
 @Injectable()
 export class InMemoryService {
   private readonly store: Record<string, Record<string, any>> = {};
 
-  findUnique<T>(
+  findUnique<T extends GenericItem>(
     tableName: string,
     predicate: (item: T) => boolean,
   ): T | undefined {
@@ -30,7 +35,7 @@ export class InMemoryService {
     return item;
   }
 
-  findMany<T>(
+  findMany<T extends GenericItem>(
     tableName: string,
     predicate: (item: T) => boolean,
     pagination?: { page: number; limit: number },
@@ -55,7 +60,7 @@ export class InMemoryService {
     const { page = 1, limit = 5 } = pagination || {};
 
     const pageStart = (page - 1) * limit;
-    const pageEnd = pageStart + (limit - 1);
+    const pageEnd = pageStart + limit;
     const paginatedItems = filteredItems.slice(pageStart, pageEnd);
 
     const totalPages = Math.ceil(filteredItems.length / limit);
@@ -87,30 +92,37 @@ export class InMemoryService {
     };
   }
 
-  update<T>(tableName: string, predicate: (item: T) => boolean, data: any) {
+  update<T extends GenericItem>(
+    tableName: string,
+    predicate: (item: T) => boolean,
+    data: any,
+  ) {
     const item = Object.values(this.store[tableName]).find((item) =>
       predicate(item),
-    );
+    ) as T;
 
-    if (!item) return false;
+    if (!item) return;
 
     this.store[tableName][item.id] = {
       ...this.store[tableName][item.id],
       ...data,
     };
 
-    return true;
+    return item;
   }
 
-  delete<T>(tableName: string, predicate: (item: T) => boolean) {
+  delete<T extends GenericItem>(
+    tableName: string,
+    predicate: (item: T) => boolean,
+  ) {
     const item = Object.values(this.store[tableName]).find((item) =>
       predicate(item),
-    );
+    ) as T;
 
-    if (!item) return false;
+    if (!item) return;
 
     delete this.store[tableName][item.id];
 
-    return true;
+    return item;
   }
 }
